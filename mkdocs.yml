@@ -1,0 +1,41 @@
+site_name: ARIES
+site_description: Adaptive Residual-based Iterative Ensemble Smoother for hydrological model calibration
+site_url: https://frbennett.github.io/aries
+repo_url: https://github.com/frbennett/aries
+repo_name: frbennett/aries
+
+theme:
+  name: material
+  palette:
+    primary: teal
+    accent: orange
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - pymdownx.arithmatex
+  - footnotes
+
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - API Reference:
+    - esmda (core): api/core.md
+    - Noise estimation: api/noise.md
+    - Linear algebra: api/linalg.md
+    - Metrics: api/metrics.md
+  - Examples:
+    - SAC-SMA calibration: examples/sacsma.md
+    - GR4J comparison: examples/gr4j.md
+    - CWIEKI adaptive: examples/cwieki.md
+  - Reference:
+    - Theory: reference/theory.md
+    - Bibliography: reference/bibliography.md
