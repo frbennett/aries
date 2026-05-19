@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aries"
+version = "0.1.0"
+description = "Adaptive Residual-based Iterative Ensemble Smoother for hydrological model calibration"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.21",
+    "scipy>=1.7",
+    "pandas>=1.3",
+]
+
+[project.urls]
+Repository = "https://github.com/frbennett/aries"
+
+[tool.setuptools.packages.find]
+include = ["aries*"]
