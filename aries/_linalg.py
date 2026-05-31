@@ -4,6 +4,7 @@ Linear algebra utilities for ES-MDA inversion: SVD, subspace methods, Dask.
 
 import numpy as np
 import scipy.linalg as sla
+from scipy.linalg import solve
 from sklearn.utils.extmath import randomized_svd
 
 
@@ -157,17 +158,36 @@ def dask_inverse(M, Cmd, Duc, D, del_D, phi, alpha, Ne):
 
 
 def efast_inverse(M, Cmd, Duc, D, del_D, rand_phi, alpha, Ne):
-    """Efficient (fast) subspace inverse Kalman update."""
-    Ud, Wd, Vd = np.linalg.svd(
-        del_D, full_matrices=False, compute_uv=True, hermitian=False
-    )
-    Binv = np.diag(Wd ** (-2))
-    aCd = (Ne - 1) * alpha * rand_phi ** 2
-    AinvUd = ((aCd ** (-1)) * Ud.T).T
-    bracket = Binv + Ud.T @ AinvUd
-    bracketinv = np.linalg.inv(bracket)
-    Kinv = (Ne - 1) * (
-        np.diag(aCd ** (-1)) - AinvUd @ bracketinv @ AinvUd.T
-    )
-    M_update = M + Cmd @ Kinv @ (Duc - D)
+    """Efficient (fast) subspace inverse Kalman update.
+
+    Uses a matrix-free approach: instead of forming the (Nd × Nd) ``Kinv``
+    matrix, it directly computes ``Kinv @ (Duc - D)`` by solving a small
+    (r × r) system in the SVD-subspace.  This reduces peak memory from
+    O(Nd² + Nd·Ne) to O(Nd·Ne) and improves numerical stability.
+
+    Singular values of ``del_D`` below a tolerance derived from machine
+    epsilon are regularised to ``inf`` (effectively zero damping), preventing
+    the blow-up that would otherwise occur from inverting near-zero values.
+    """
+    # Ensure rand_phi is at least 1-D (handles scalar inputs gracefully)
+    rand_phi = np.atleast_1d(np.asarray(rand_phi))
+    Nd = rand_phi.shape[0]
+    aCd = (Ne - 1) * alpha * rand_phi ** 2      # (Nd,) or scalar
+
+    Ud, Wd, _ = np.linalg.svd(del_D, full_matrices=False)
+
+    # Regularise tiny singular values to prevent numerical blow-up
+    tol = Wd.max() * max(del_D.shape) * np.finfo(Wd.dtype).eps
+    Wd_safe = np.where(Wd > tol, Wd, np.inf)
+    Binv = np.diag(Wd_safe ** (-2))              # (r, r)
+
+    AinvUd = Ud / aCd[:, None]                   # (Nd, r)  -- no Nd×Nd matrix!
+    bracket = Binv + Ud.T @ AinvUd               # (r, r)
+
+    # Compute Kinv @ (Duc - D) without forming the full (Nd, Nd) inverse
+    v = (Duc - D) / aCd[:, None]                 # (Nd, Ne)
+    temp = solve(bracket, Ud.T @ v, assume_a='pos')  # (r, Ne)
+    Kinv_action = (Ne - 1) * (v - AinvUd @ temp)     # (Nd, Ne)
+
+    M_update = M + Cmd @ Kinv_action
     return M_update
