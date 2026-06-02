@@ -289,27 +289,27 @@ class esmda:
 
             # Perturb observations
             Duc = np.zeros_like(D)
-            # Student-t: scale perturbation by 1/√λ (precision multiplier)
-            if self.likelihood == "student_t":
-                wt_factor = 1.0 / np.sqrt(np.maximum(self._lam, 1e-6))
-            else:
-                wt_factor = 1.0
-
             for i in range(self.nEnsemble):
                 if self.calculation_type == "ikea":
                     Duc[:, i] = (
-                        np.sqrt(step_inflation) * phi[:, i] * wt_factor
+                        np.sqrt(step_inflation) * phi[:, i]
                         * np.random.normal(0, 1, Nd)
                         + d_obs
                     )
                 else:
                     Duc[:, i] = (
-                        np.sqrt(step_inflation) * phi * wt_factor
+                        np.sqrt(step_inflation) * phi
                         * np.random.normal(0, 1, Nd)
                         + d_obs
                     )
 
             start = time.time()
+
+            # ── Student-t: inflate noise covariance by 1/λ ──────────────────
+            if self.likelihood == "student_t":
+                inv_sqrt_lam = 1.0 / np.sqrt(np.maximum(self._lam, 1e-6))
+            else:
+                inv_sqrt_lam = np.ones(Nd)
 
             # Calculate M_update
             M_update = np.zeros_like(M)
@@ -318,7 +318,7 @@ class esmda:
                 Cdd = (del_D @ del_D.T) / (Ne - 1)
                 for index in range(Ne):
                     Cd = np.zeros([self.dLength, self.dLength])
-                    np.fill_diagonal(Cd, phi[:, index] ** 2)
+                    np.fill_diagonal(Cd, phi[:, index] ** 2 * inv_sqrt_lam ** 2)
                     K = Cdd + step_inflation * Cd
                     Kinv, svd_rank = sla.pinvh(K, return_rank=True)
                     M_update[:, index] = (
@@ -331,7 +331,7 @@ class esmda:
                 )
                 Binv = np.diag(Wd ** (-2))
                 for index in range(Ne):
-                    aCd = (Ne - 1) * step_inflation * phi[:, index] ** 2
+                    aCd = (Ne - 1) * step_inflation * phi[:, index] ** 2 * inv_sqrt_lam ** 2
                     Ainv = np.diag(aCd ** (-1))
                     bracket = Binv + Ud.T @ Ainv @ Ud
                     bracketinv = np.linalg.inv(bracket)
@@ -350,7 +350,7 @@ class esmda:
                 )
                 Binv = np.diag(Wd ** (-2))
                 for index in range(Ne):
-                    aCd = (Ne - 1) * step_inflation * phi[:, index] ** 2
+                    aCd = (Ne - 1) * step_inflation * phi[:, index] ** 2 * inv_sqrt_lam ** 2
                     AinvUd = ((aCd ** (-1)) * Ud.T).T
                     bracket = Binv + Ud.T @ AinvUd
                     bracketinv = np.linalg.inv(bracket)
@@ -367,7 +367,7 @@ class esmda:
                 for i in range(Nd):
                     phi_mean_i = np.mean(phi[i, :])
                     phi_std_i = np.std(phi[i, :])
-                    rand_phi[i] = truncnorm.rvs(-1, 1, phi_mean_i, phi_std_i)
+                    rand_phi[i] = truncnorm.rvs(-1, 1, phi_mean_i, phi_std_i) * inv_sqrt_lam[i]
                 M_update = efast_inverse(
                     M, Cmd, Duc, D, del_D, rand_phi, step_inflation, Ne
                 )
@@ -377,7 +377,7 @@ class esmda:
                 for i in range(Nd):
                     phi_mean_i = np.mean(phi[i, :])
                     phi_std_i = np.std(phi[i, :])
-                    rand_phi[i] = truncnorm.rvs(-1, 1, phi_mean_i, phi_std_i)
+                    rand_phi[i] = truncnorm.rvs(-1, 1, phi_mean_i, phi_std_i) * inv_sqrt_lam[i]
                 M_update = dask_inverse(
                     M, Cmd, Duc, D, del_D, rand_phi, step_inflation, Ne
                 )
@@ -387,7 +387,7 @@ class esmda:
                     del_D, full_matrices=False, compute_uv=True, hermitian=False
                 )
                 Binv = np.diag(Wd ** (-2))
-                aCd = (Ne - 1) * step_inflation * phi ** 2
+                aCd = (Ne - 1) * step_inflation * phi ** 2 * inv_sqrt_lam ** 2
                 AinvUd = ((aCd ** (-1)) * Ud.T).T
                 bracket = Binv + Ud.T @ AinvUd
                 bracketinv = np.linalg.inv(bracket)
