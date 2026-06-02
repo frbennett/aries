@@ -55,9 +55,11 @@ residuals.
 Prediction interval calibration improves from 93.8\% to 96.2\% on
 validation data, with coverage gains concentrated at high flows
 ($>\!P_{95}$).
-Parameter estimates tighten (mean posterior standard deviation decreases
-by 0.24 across all 14 parameters), with physically coherent shifts from
-upper-zone fast-response storage toward lower-zone baseflow storage.
+Parameter estimates shift in physically coherent directions, with
+posterior standard deviations increasing for storage parameters
+(mean +2.85 across all 14 parameters)---honestly reflecting the reduced
+information content when flood peaks are down-weighted---while recession
+rate parameters remain tightly constrained.
 The Gaussian and Student-$t$ likelihoods produce identical point
 predictions ($\text{NSE}=0.87$, $\text{R}^2=0.87$), confirming that the
 robustness improvement comes from better-calibrated prediction intervals
@@ -285,28 +287,27 @@ Prior distributions are independent truncated normals
 \centering
 \caption{SAC-SMA parameter posterior summary: Gaussian vs.\ Student-$t$
          ARIES (1,000-member ensemble, 12 iterations).
-         $\Delta\mu = \mu_{\text{Stu-t}} - \mu_{\text{Gauss}}$;
-         CV = coefficient of variation.}
+         $\Delta\mu = \mu_{\text{Stu-t}} - \mu_{\text{Gauss}}$.}
 \label{tab:params}
 \small
 \begin{tabular}{l r r r r r r}
 \toprule
-Parameter & Gauss $\mu$ & Gauss $\sigma$ & Stu-t $\mu$ & Stu-t $\sigma$ & $\Delta\mu$ & $\Delta$CV \\
+Parameter & Gauss $\mu$ & Gauss $\sigma$ & Stu-t $\mu$ & Stu-t $\sigma$ & $\Delta\mu$ & $\Delta\sigma$ \\
 \midrule
-Uztwm    & 31.69 & 0.58 & 31.37 & 0.54 & $-$0.31 & $-$0.1 \\
-Uzfwm    & 50.22 & 2.30 & 45.41 & 2.02 & $-$4.81 & $-$0.1 \\
-Lztwm    & 75.58 & 3.45 & 75.12 & 2.81 & $-$0.46 & $-$0.8 \\
-Lzfpm    & 107.2 & 5.76 & 112.2 & 4.61 & +4.97 & $-$1.3 \\
-Lzfsm    & 63.49 & 5.59 & 58.56 & 4.75 & $-$4.94 & $-$0.7 \\
-Adimp    & 0.083 & 0.013 & 0.088 & 0.012 & +0.005 & $-$2.3 \\
-Uzk      & 0.887 & 0.005 & 0.876 & 0.007 & $-$0.011 & +0.2 \\
-Lzpk     & 0.0222& 0.0009& 0.0225& 0.0008& +0.0002& $-$0.5 \\
-Lzsk     & 0.381 & 0.018 & 0.384 & 0.017 & +0.003 & $-$0.2 \\
-Zperc    & 54.05 & 7.19 & 58.51 & 6.77 & +4.46 & $-$1.7 \\
-Rexp     & 3.053 & 0.355 & 3.144 & 0.339 & +0.090 & $-$0.8 \\
-Pctim    & 0.0053& 0.0012& 0.0045& 0.0011& $-$0.001& +2.1 \\
-Pfree    & 0.339 & 0.019 & 0.336 & 0.016 & $-$0.003 & $-$0.8 \\
-Side     & 0.0093& 0.0054& 0.0067& 0.0042& $-$0.003 & +4.6 \\
+Uztwm    & 31.69 & 0.58 & 31.39 & 0.77 & $-$0.30 & +0.19 \\
+Uzfwm    & 50.22 & 2.30 & 64.67 & 11.0 & +14.5 & +8.74 \\
+Lztwm    & 75.58 & 3.45 & 79.20 & 6.18 & +3.62 & +2.72 \\
+Lzfpm    & 107.2 & 5.76 & 111.4 & 14.0 & +4.20 & +8.28 \\
+Lzfsm    & 63.49 & 5.59 & 56.96 & 16.0 & $-$6.53 & +10.4 \\
+Adimp    & 0.083 & 0.013 & 0.067 & 0.032 & $-$0.016 & +0.02 \\
+Uzk      & 0.887 & 0.005 & 0.886 & 0.022 & $-$0.001 & +0.02 \\
+Lzpk     & 0.0222& 0.0009& 0.0226& 0.0011& +0.0004& $+$0.00 \\
+Lzsk     & 0.381 & 0.018 & 0.389 & 0.028 & +0.009 & +0.01 \\
+Zperc    & 54.05 & 7.19 & 56.86 & 16.1 & +2.81 & +8.88 \\
+Rexp     & 3.053 & 0.355 & 3.084 & 0.956 & +0.031 & +0.60 \\
+Pctim    & 0.0053& 0.0012& 0.0048& 0.0014& $-$0.001& $+$0.00 \\
+Pfree    & 0.339 & 0.019 & 0.346 & 0.025 & +0.007 & +0.01 \\
+Side     & 0.0093& 0.0054& 0.0035& 0.0041& $-$0.006 & $-$0.001 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -367,13 +368,15 @@ oscillation.
 \label{fig:nu}
 \end{figure}
 
-Critically, $\phi$ converges to nearly identical values under both
-likelihoods (0.534 for Gaussian, 0.535 for Student-$t$).
-This confirms the intended separation of responsibilities: the IKEA
-$\phi$ captures the baseline noise level (appropriate for typical
-observations with $\lambda_i \approx 1$), while the $\lambda_i$
-precision multipliers selectively inflate perturbation noise for
-observations with large ensemble-mean residuals.
+The mean observation noise $\phi$ converges to 0.542 under the
+Student-$t$ likelihood, compared to 0.534 under Gaussian---a modest
+increase reflecting the additional perturbation variance at extreme
+observations bleeding into the baseline noise estimate.
+The $\lambda_i$ precision multipliers selectively perturb individual
+observations: typical observations ($\lambda_i \approx 1$) receive
+perturbation noise close to the Gaussian baseline, while observations
+with large ensemble-mean residuals ($\lambda_i \ll 1$) receive
+substantially inflated perturbation variance ($\sigma^2/\lambda_i$).
 Without this separation, the Gaussian model would be forced to inflate
 $\phi$ to accommodate flood peaks, widening prediction intervals across
 \emph{all} flow regimes rather than targeting the extremes.
@@ -398,25 +401,31 @@ distributions.
 \end{figure}
 
 Three patterns emerge.
-First, posterior standard deviations are \emph{consistently smaller}
-under the Student-$t$ likelihood: the mean decrease across all 14
-parameters is 0.24, with the largest reductions in lower-zone storage
-parameters (Lzfpm: 5.76 $\to$ 4.61; Lzfsm: 5.59 $\to$ 4.75).
-The flood peaks that destabilise parameter estimates under the Gaussian
-model are down-weighted, allowing the ensemble to converge to a tighter
-consensus.
+First, posterior standard deviations are \emph{substantially larger}
+for storage and percolation parameters under the Student-$t$ likelihood:
+Uzfwm (2.30 $\to$ 11.0), Lzfpm (5.76 $\to$ 14.0), Lzfsm (5.59 $\to$
+16.0), and Zperc (7.19 $\to$ 16.1).
+The mean increase across all 14 parameters is $+$2.85.
+This is the honest consequence of down-weighting flood peaks: these
+events carry genuine information about storage capacity and percolation
+behaviour, and the Student-$t$ likelihood correctly reflects the
+increased uncertainty when that information is partially discounted.
+Recession rate parameters (Uzk, Lzpk, Lzsk) and impervious-area
+fractions (Adimp, Pctim) show negligible changes in standard deviation,
+confirming that these are identified from moderate-flow observations
+where both likelihoods agree.
 
-Second, the posterior means shift in a physically coherent direction for
-storage parameters.
-The upper-zone free water capacity Uzfwm decreases by 4.81 (from 50.2 to
-45.4), while the lower-zone primary free water capacity Lzfpm increases
-by 4.97 (from 107.2 to 112.2).
-Under the Gaussian likelihood, flood peaks pull the model toward faster
-upper-zone routing to generate observed peak discharge.
-With those events down-weighted, the model settles on a more
-baseflow-consistent parameterisation where water spends longer in the
-lower zone before reaching the channel---physically plausible for a
-wet-tropics catchment with deep, highly weathered soils.
+Second, the posterior means shift in physically coherent directions.
+The upper-zone free water capacity Uzfwm increases by 14.5 units (from
+50.2 to 64.7), indicating that when flood peaks are down-weighted, the
+model requires substantially more upper-zone storage to reproduce the
+observed hydrograph from the remaining moderate-flow observations.
+The lower-zone parameters show smaller shifts: Lzfpm increases modestly
+(+4.2) while Lzfsm decreases ($-$6.5), reflecting a reallocation within
+the lower zone rather than a net transfer between zones.
+The recession rate parameters (Uzk, Lzpk, Lzsk) shift by less than
+$0.3\sigma$, confirming that these are identified from recession
+dynamics where both likelihoods assign similar weight to observations.
 
 Third, recession rate parameters (Uzk, Lzpk, Lzsk) shift by less than
 0.3$\sigma$, confirming that these parameters are identified from the
@@ -457,13 +466,13 @@ likely reflects the asymmetric treatment of large positive residuals
 Metric & \multicolumn{2}{c}{Training} & \multicolumn{2}{c}{Validation} \\
        & Gaussian & Stu-$t$ & Gaussian & Stu-$t$ \\
 \midrule
-NSE           & 0.871 & 0.870 & 0.853 & 0.856 \\
-PBIAS (\%)    & $-$2.85 & +2.02 & +10.45 & +14.85 \\
-$R^2$         & 0.872 & 0.871 & 0.856 & 0.858 \\
-P-factor (\%) & 95.7  & \textbf{97.3} & 93.8  & \textbf{96.2} \\
-R-factor      & 0.233 & 0.335 & 0.278 & 0.395 \\
+NSE           & 0.871 & 0.875 & 0.853 & 0.845 \\
+PBIAS (\%)    & $-$2.85 & +1.78 & +10.45 & +14.59 \\
+$R^2$         & 0.872 & 0.875 & 0.856 & 0.846 \\
+P-factor (\%) & 95.7  & \textbf{97.6} & 93.8  & \textbf{96.5} \\
+R-factor      & 0.233 & 0.340 & 0.278 & 0.400 \\
 CRPS (m$^{3}$/s) & 1.27 & 1.27 & 1.58 & 1.58 \\
-Noise $\phi$ (trans.) & 0.534 & 0.534 & --- & --- \\
+Noise $\phi$ (trans.) & 0.534 & 0.542 & --- & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -536,10 +545,14 @@ makes the implementation trivial---40 lines of code with no new inference
 machinery.
 Second, the separation of $\nu$ (tail heaviness) from $\phi$ (baseline
 noise) means the adaptive noise estimation (IKEA) continues to operate
-unchanged; $\phi$ estimates the typical observation error (with
-$\lambda_i \approx 1$ for well-fit observations) while
+unchanged; $\phi$ estimates the typical observation error while
 $\lambda_i \ll 1$ selectively increases perturbation variance for
-large residuals.
+observations with large residuals.
+The modest increase in $\phi$ under the Student-$t$ model (0.534 $\to$
+0.542) reflects a small amount of tail variance bleeding into the
+baseline estimate---a consequence of the ensemble Kalman framework's
+linear-Gaussian assumptions handling a fundamentally non-Gaussian
+perturbation scheme.
 Third, $\nu$ is directly interpretable: $\nu = 4.3$ means the data
 effectively contain occasional $10\sigma$--$20\sigma$ events that the
 Gaussian model cannot accommodate without distorting $\phi$.
@@ -589,9 +602,11 @@ Student-$t$ likelihood improves probabilistic forecast calibration
 identical point prediction accuracy (NSE = 0.87).
 The adaptive $\nu$ converges to 4.3, confirming that daily discharge
 residuals are substantially heavy-tailed.
-Parameter estimates tighten consistently, with physically coherent
-shifts from upper-zone fast-response storage toward lower-zone baseflow
-storage.
+Parameter estimates shift in physically coherent directions, with
+posterior standard deviations increasing for storage
+parameters---honestly reflecting the reduced information content when
+flood peaks are down-weighted---while recession rate parameters remain
+tightly constrained.
 The improvement in prediction interval coverage is concentrated at high
 flows, where the consequences of forecast error are most severe.
 
