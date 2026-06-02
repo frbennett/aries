@@ -43,9 +43,10 @@ iteration using kurtosis matching with exponential moving-average smoothing.
 The method adds approximately 40 lines to the existing codebase, requires no
 new tuning parameters, and preserves the exactness of the ensemble Kalman
 update conditional on the $\lambda_i$.
-At iteration~0, $\lambda_i$ are drawn from the prior $\text{InvGamma}(\nu/2,
+At iteration~0, $\lambda_i$ are drawn from the prior $\text{Gamma}(\nu/2,
 \nu/2)$; subsequent iterations use the posterior conditional on the current
-ensemble residuals, targeting down-weighting at actual outliers.
+ensemble residuals, inflating perturbation variance for observations with
+large residuals.
 We demonstrate the method on the St~Helens Creek catchment in North
 Queensland, calibrating the 14-parameter SAC-SMA model against 14,610~days
 of daily discharge.
