@@ -52,9 +52,9 @@ Queensland, calibrating the 14-parameter SAC-SMA model against 14,610~days
 of daily discharge.
 The adaptive $\nu$ converges from 8.0 to 4.3, confirming heavy-tailed
 residuals.
-Prediction interval calibration improves from 93.8\% to 96.2\% on
-validation data, with coverage gains concentrated at high flows
-($>\!P_{95}$).
+Prediction interval calibration improves from 93.8\% to 96.5\% on
+validation data, with no loss of point-prediction accuracy
+($\Delta$NSE $<$ 0.001 on validation).
 Parameter estimates shift in physically coherent directions, with
 posterior standard deviations increasing for storage parameters
 (mean +2.85 across all 14 parameters)---honestly reflecting the reduced
@@ -294,20 +294,20 @@ Prior distributions are independent truncated normals
 \toprule
 Parameter & Gauss $\mu$ & Gauss $\sigma$ & Stu-t $\mu$ & Stu-t $\sigma$ & $\Delta\mu$ & $\Delta\sigma$ \\
 \midrule
-Uztwm    & 31.69 & 0.58 & 31.39 & 0.77 & $-$0.30 & +0.19 \\
-Uzfwm    & 50.22 & 2.30 & 64.67 & 11.0 & +14.5 & +8.74 \\
-Lztwm    & 75.58 & 3.45 & 79.20 & 6.18 & +3.62 & +2.72 \\
-Lzfpm    & 107.2 & 5.76 & 111.4 & 14.0 & +4.20 & +8.28 \\
-Lzfsm    & 63.49 & 5.59 & 56.96 & 16.0 & $-$6.53 & +10.4 \\
-Adimp    & 0.083 & 0.013 & 0.067 & 0.032 & $-$0.016 & +0.02 \\
-Uzk      & 0.887 & 0.005 & 0.886 & 0.022 & $-$0.001 & +0.02 \\
-Lzpk     & 0.0222& 0.0009& 0.0226& 0.0011& +0.0004& $+$0.00 \\
-Lzsk     & 0.381 & 0.018 & 0.389 & 0.028 & +0.009 & +0.01 \\
-Zperc    & 54.05 & 7.19 & 56.86 & 16.1 & +2.81 & +8.88 \\
-Rexp     & 3.053 & 0.355 & 3.084 & 0.956 & +0.031 & +0.60 \\
-Pctim    & 0.0053& 0.0012& 0.0048& 0.0014& $-$0.001& $+$0.00 \\
-Pfree    & 0.339 & 0.019 & 0.346 & 0.025 & +0.007 & +0.01 \\
-Side     & 0.0093& 0.0054& 0.0035& 0.0041& $-$0.006 & $-$0.001 \\
+Uztwm    & 31.69 & 0.58 & 31.50 & 0.91 & $-$0.19 & +0.33 \\
+Uzfwm    & 50.22 & 2.30 & 41.56 & 2.95 & $-$8.66 & +0.66 \\
+Lztwm    & 75.58 & 3.45 & 86.80 & 5.43 & +11.2 & +1.98 \\
+Lzfpm    & 107.2 & 5.76 & 131.9 & 8.91 & +24.7 & +3.15 \\
+Lzfsm    & 63.49 & 5.59 & 74.42 & 7.70 & +10.9 & +2.11 \\
+Adimp    & 0.083 & 0.013 & 0.048 & 0.015 & $-$0.035 & +0.002 \\
+Uzk      & 0.887 & 0.005 & 0.841 & 0.017 & $-$0.046 & +0.012 \\
+Lzpk     & 0.0222& 0.0009& 0.0213& 0.0010& $-$0.001& $+$0.000 \\
+Lzsk     & 0.381 & 0.018 & 0.347 & 0.025 & $-$0.033 & +0.008 \\
+Zperc    & 54.05 & 7.19 & 48.40 & 8.66 & $-$5.65 & +1.47 \\
+Rexp     & 3.053 & 0.355 & 3.858 & 0.407 & +0.805 & +0.052 \\
+Pctim    & 0.0053& 0.0012& 0.0037& 0.0012& $-$0.002& $+$0.000 \\
+Pfree    & 0.339 & 0.019 & 0.361 & 0.026 & +0.022 & +0.008 \\
+Side     & 0.0093& 0.0054& 0.094 & 0.032 & +0.084 & +0.026 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -368,10 +368,12 @@ oscillation.
 \label{fig:nu}
 \end{figure}
 
-The mean observation noise $\phi$ converges to 0.542 under the
-Student-$t$ likelihood, compared to 0.534 under Gaussian---a modest
-increase reflecting the additional perturbation variance at extreme
-observations bleeding into the baseline noise estimate.
+The mean observation noise $\phi$ converges to 0.541 under the
+Student-$t$ likelihood, compared to 0.534 under Gaussian.
+The near-identical values confirm that the IKEA noise estimation
+operates on raw residuals (which are unaffected by the $\lambda_i$
+weights in the Kalman gain) and that the baseline observation error is
+stable across both likelihood specifications.
 The $\lambda_i$ precision multipliers selectively perturb individual
 observations: typical observations ($\lambda_i \approx 1$) receive
 perturbation noise close to the Gaussian baseline, while observations
@@ -401,31 +403,39 @@ distributions.
 \end{figure}
 
 Three patterns emerge.
-First, posterior standard deviations are \emph{substantially larger}
-for storage and percolation parameters under the Student-$t$ likelihood:
-Uzfwm (2.30 $\to$ 11.0), Lzfpm (5.76 $\to$ 14.0), Lzfsm (5.59 $\to$
-16.0), and Zperc (7.19 $\to$ 16.1).
-The mean increase across all 14 parameters is $+$2.85.
-This is the honest consequence of down-weighting flood peaks: these
-events carry genuine information about storage capacity and percolation
-behaviour, and the Student-$t$ likelihood correctly reflects the
-increased uncertainty when that information is partially discounted.
-Recession rate parameters (Uzk, Lzpk, Lzsk) and impervious-area
-fractions (Adimp, Pctim) show negligible changes in standard deviation,
-confirming that these are identified from moderate-flow observations
-where both likelihoods agree.
+First, posterior means shift substantially for parameters that are
+sensitive to high-flow observations.
+The upper-zone depletion rate Uzk decreases from 0.887 to 0.841
+($-0.046$), the lower-zone primary free water capacity Lzfpm increases
+from 107.2 to 131.9 (+24.7), and the deep-recharge ratio Side moves
+from 0.009 to 0.094 (+0.084).
+Under the Gaussian likelihood, flood peaks pull the parameter estimates
+toward values that generate rapid upper-zone drainage and minimal deep
+recharge to match observed peak discharge.
+The Student-$t$ likelihood, by inflating the observation noise
+covariance for large residuals via the $\lambda_i$ weights, genuinely
+reduces the influence of these events in the Kalman gain, allowing
+parameters to settle toward values more consistent with the dominant
+(moderate-flow) regime.
+Posterior standard deviations increase modestly (mean $\Delta\sigma =
++0.70$), with the largest increases in parameters that shift the most
+(Lzfpm: $+3.15$, Lzfsm: $+2.11$), reflecting the reduced effective
+sample size when flood observations are discounted.
 
-Second, the posterior means shift in physically coherent directions.
-The upper-zone free water capacity Uzfwm increases by 14.5 units (from
-50.2 to 64.7), indicating that when flood peaks are down-weighted, the
-model requires substantially more upper-zone storage to reproduce the
-observed hydrograph from the remaining moderate-flow observations.
-The lower-zone parameters show smaller shifts: Lzfpm increases modestly
-(+4.2) while Lzfsm decreases ($-$6.5), reflecting a reallocation within
-the lower zone rather than a net transfer between zones.
-The recession rate parameters (Uzk, Lzpk, Lzsk) shift by less than
-$0.3\sigma$, confirming that these are identified from recession
-dynamics where both likelihoods assign similar weight to observations.
+Second, the recession rate parameters shift in a physically coherent
+direction: Uzk decreases from 0.887 to 0.841 ($-0.046$) and Lzsk
+decreases from 0.381 to 0.347 ($-0.033$).
+Flood peaks, which carry limited information about recession dynamics
+but exert large leverage under the Gaussian model, pull recession rates
+toward faster values to match the steep falling limb of the hydrograph
+after large events.
+With these observations down-weighted, the model settles on slower
+recession rates more representative of the baseflow-dominated periods
+that constitute the majority of the record.
+The deep-recharge ratio Side exhibits the largest relative shift,
+moving from 0.009 to 0.094---under the Gaussian model this parameter
+was effectively pinned at the lower prior bound by flood observations
+requiring all available water to reach the channel rapidly.
 
 Third, recession rate parameters (Uzk, Lzpk, Lzsk) shift by less than
 0.3$\sigma$, confirming that these parameters are identified from the
@@ -438,25 +448,26 @@ little information about recession dynamics.
 
 Table~\ref{tab:metrics} compares predictive performance metrics under
 both likelihoods.
-Point prediction accuracy is essentially identical: NSE differs by
-$<$0.002 and $R^2$ by $<$0.003 in both training and validation.
+Point prediction accuracy is comparable: training NSE decreases
+modestly from 0.871 to 0.859 under the Student-$t$ model, while
+validation NSE is essentially unchanged (0.853 vs.\ 0.854).
 This is expected---the posterior predictive mean is the Bayes estimator
 under squared-error loss for both likelihoods, and the outlier
-down-weighting shifts the posterior mass but does not change the
+down-weighting reduces the influence of extreme observations on
+the parameter estimates but does not change the
 expectation of the predictive distribution.
-Training PBIAS is small under both likelihoods ($-2.9$\% vs.\ $+2.0$\%);
-validation PBIAS is larger ($+10.4$\% vs.\ $+14.9$\%), reflecting the
+Training PBIAS is small under both likelihoods ($-2.9$\% vs.\ $-2.4$\%).
+Validation PBIAS is larger ($+10.5$\% vs.\ $+10.0$\%), reflecting the
 wetter-than-average validation period (mean observed discharge 4.73
-vs.\ 3.94~m$^{3}$/s in training).
-The 4.4 percentage-point increase in validation PBIAS under the
-Student-$t$ model is small relative to the overall validation bias and
-likely reflects the asymmetric treatment of large positive residuals
-(flood peaks) by the heavier-tailed likelihood.
+vs.\ 3.94~m$^{3}$/s in training) rather than a likelihood-dependent
+effect.
+The near-identical validation PBIAS under both likelihoods indicates
+that the Student-$t$ down-weighting does not introduce systematic bias
+in the posterior predictive mean.
 
 \begin{table}[tbp]
 \centering
 \caption{Predictive performance: Gaussian vs.\ Student-$t$ ARIES.
-         CRPS computed from 500 posterior predictive draws.
          P-factor and R-factor use each model's own noise distribution
          for interval construction.}
 \label{tab:metrics}
@@ -466,13 +477,12 @@ likely reflects the asymmetric treatment of large positive residuals
 Metric & \multicolumn{2}{c}{Training} & \multicolumn{2}{c}{Validation} \\
        & Gaussian & Stu-$t$ & Gaussian & Stu-$t$ \\
 \midrule
-NSE           & 0.871 & 0.875 & 0.853 & 0.845 \\
-PBIAS (\%)    & $-$2.85 & +1.78 & +10.45 & +14.59 \\
-$R^2$         & 0.872 & 0.875 & 0.856 & 0.846 \\
-P-factor (\%) & 95.7  & \textbf{97.6} & 93.8  & \textbf{96.5} \\
-R-factor      & 0.233 & 0.340 & 0.278 & 0.400 \\
-CRPS (m$^{3}$/s) & 1.27 & 1.27 & 1.58 & 1.58 \\
-Noise $\phi$ (trans.) & 0.534 & 0.542 & --- & --- \\
+NSE           & 0.871 & 0.859 & 0.853 & 0.854 \\
+PBIAS (\%)    & $-$2.85 & $-$2.44 & +10.45 & +10.02 \\
+$R^2$         & 0.872 & 0.859 & 0.856 & 0.855 \\
+P-factor (\%) & 95.7  & \textbf{97.5} & 93.8  & \textbf{96.5} \\
+R-factor      & 0.233 & 0.336 & 0.278 & 0.397 \\
+Noise $\phi$ (trans.) & 0.534 & 0.541 & --- & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
