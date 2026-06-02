@@ -109,6 +109,11 @@ class esmda:
         self.inflation_schedule = "fixed"  # "fixed" for ES-MDA, "ess" for CWIEKI
         self.target_ess = 0.5              # ESS threshold (fraction of Ne)
         self.save_all_iterations = False
+        # Student-t likelihood parameters
+        self.likelihood = "gaussian"       # "gaussian" or "student_t"
+        self.nu_init = 8.0                 # initial degrees of freedom
+        self.nu_adapt = True               # adapt ν from residuals each iter
+        self.nu_smooth = 0.7               # EMA smoothing (0=no memory, 1=frozen)
 
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -183,6 +188,34 @@ class esmda:
                 M_invt, self.nEnsemble, self.mLength, self.dLength
             )
 
+            # ── Student-t: estimate ν and draw latent weights ────────────────
+            if self.likelihood == "student_t":
+                if iter == 0:
+                    self._nu = self.nu_init
+
+                if self.nu_adapt and iter > 0:
+                    # Estimate ν from ensemble-mean residuals via kurtosis
+                    D_mean_arr = D.mean(axis=1)
+                    resid = np.asarray(d_obs) - D_mean_arr
+                    phi_mean_arr = phi.mean(axis=1)
+                    r_std = resid / np.maximum(phi_mean_arr, 1e-8)
+                    # Clip extremes before computing kurtosis
+                    r_clip = np.clip(r_std, -8, 8)
+                    k = np.mean(r_clip ** 4) / (np.mean(r_clip ** 2) ** 2)
+                    if k > 3.1:
+                        nu_est = 4.0 + 6.0 / (k - 3.0)
+                    else:
+                        nu_est = 100.0  # effectively Gaussian
+                    # EMA smoothing
+                    self._nu = (self.nu_smooth * self._nu +
+                                (1 - self.nu_smooth) * np.clip(nu_est, 3.0, 100.0))
+
+                # Draw λ_i ~ InvGamma(ν/2, ν/2)  → mean = 1 for ν > 2
+                nu = max(self._nu, 2.1)  # guard against degenerate values
+                self._lam = 1.0 / np.random.gamma(
+                    shape=nu / 2, scale=2.0 / nu, size=Nd
+                )
+
             # is_final depends on schedule
             if self.inflation_schedule == "ess":
                 is_final = False  # determined by α reaching 1
@@ -243,16 +276,22 @@ class esmda:
 
             # Perturb observations
             Duc = np.zeros_like(D)
+            # Student-t weight factor: 1/√λ  (mean λ=1, so mean factor=1)
+            if self.likelihood == "student_t":
+                wt_factor = 1.0 / np.sqrt(np.maximum(self._lam, 1e-6))
+            else:
+                wt_factor = 1.0
+
             for i in range(self.nEnsemble):
                 if self.calculation_type == "ikea":
                     Duc[:, i] = (
-                        np.sqrt(step_inflation) * phi[:, i]
+                        np.sqrt(step_inflation) * phi[:, i] * wt_factor
                         * np.random.normal(0, 1, Nd)
                         + d_obs
                     )
                 else:
                     Duc[:, i] = (
-                        np.sqrt(step_inflation) * phi
+                        np.sqrt(step_inflation) * phi * wt_factor
                         * np.random.normal(0, 1, Nd)
                         + d_obs
                     )
@@ -396,6 +435,8 @@ class esmda:
             if (end - start) > 0.01:
                 diag_parts.append(f"  Time: {end - start:.2f}s")
             diag_parts.append(f"  φ = {phi.mean():.4f}")
+            if self.likelihood == "student_t":
+                diag_parts.append(f"  ν = {self._nu:.1f}")
 
             if self.inflation_schedule == "ess":
                 diag_parts.append(
