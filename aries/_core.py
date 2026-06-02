@@ -210,11 +210,24 @@ class esmda:
                     self._nu = (self.nu_smooth * self._nu +
                                 (1 - self.nu_smooth) * np.clip(nu_est, 3.0, 100.0))
 
-                # Draw λ_i ~ InvGamma(ν/2, ν/2)  → mean = 1 for ν > 2
+                # Compute standardised residuals for λ draw
+                D_mean_arr = D.mean(axis=1)
+                resid = np.asarray(d_obs) - D_mean_arr
+                phi_mean_arr = phi.mean(axis=1)
+                r2 = (resid / np.maximum(phi_mean_arr, 1e-8)) ** 2
+
                 nu = max(self._nu, 2.1)  # guard against degenerate values
-                self._lam = 1.0 / np.random.gamma(
-                    shape=nu / 2, scale=2.0 / nu, size=Nd
-                )
+
+                if iter == 0:
+                    # Prior draw (no reliable residuals at iter 0)
+                    self._lam = 1.0 / np.random.gamma(
+                        shape=nu / 2, scale=2.0 / nu, size=Nd
+                    )
+                else:
+                    # Posterior draw: λ_i | r_i ~ InvGamma((ν+1)/2, (ν + r_i²)/2)
+                    self._lam = 1.0 / np.random.gamma(
+                        shape=(nu + 1) / 2, scale=2.0 / (nu + r2), size=Nd
+                    )
 
             # is_final depends on schedule
             if self.inflation_schedule == "ess":
