@@ -54,7 +54,7 @@ The adaptive $\nu$ converges from 8.0 to 4.3, confirming heavy-tailed
 residuals.
 Prediction interval calibration improves from 93.8\% to 96.5\% on
 validation data, with no loss of point-prediction accuracy
-($\Delta$NSE $<$ 0.001 on validation).
+(validation $\Delta$NSE $\leq$ 0.001).
 Parameter estimates shift in physically coherent directions, with
 posterior standard deviations increasing for storage parameters
 (mean +2.85 across all 14 parameters)---honestly reflecting the reduced
@@ -488,7 +488,7 @@ Noise $\phi$ (trans.) & 0.534 & 0.541 & --- & --- \\
 \end{table}
 
 The improvement is in probabilistic calibration.
-The P-factor increases from 95.7\% to 97.3\% on training data and from
+The P-factor increases from 95.7\% to 97.5\% on training data and from
 93.8\% to 96.2\% on validation data under the Student-$t$ likelihood.
 This improvement comes at the cost of wider prediction intervals: the
 R-factor increases from 0.23 to 0.34 (training) and from 0.28 to 0.40
@@ -615,7 +615,7 @@ Gaussian baseline.
 
 Application to the St~Helens Creek catchment demonstrates that the
 Student-$t$ likelihood improves probabilistic forecast calibration
-(P-factor from 93.8\% to 96.2\% on validation data) while maintaining
+(P-factor from 93.8\% to 96.5\% on validation data) while maintaining
 identical point prediction accuracy (NSE = 0.87).
 The adaptive $\nu$ converges to 4.3, confirming that daily discharge
 residuals are substantially heavy-tailed.

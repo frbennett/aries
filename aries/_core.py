@@ -197,7 +197,10 @@ class esmda:
                     # Estimate ν from ensemble-mean residuals via kurtosis
                     D_mean_arr = D.mean(axis=1)
                     resid = np.asarray(d_obs) - D_mean_arr
-                    phi_mean_arr = phi.mean(axis=1)
+                    if self.calculation_type == "ikea":
+                        phi_mean_arr = phi.mean(axis=1)
+                    else:
+                        phi_mean_arr = np.asarray(phi)  # 1D phi in standard mode
                     r_std = resid / np.maximum(phi_mean_arr, 1e-8)
                     # Clip extremes before computing kurtosis
                     r_clip = np.clip(r_std, -8, 8)
@@ -287,29 +290,29 @@ class esmda:
 
             Cmd = del_M @ del_D.T / (self.nEnsemble - 1)
 
-            # Perturb observations
+            # ── Student-t: compute perturbation scaling ───────────────────
+            if self.likelihood == "student_t":
+                inv_sqrt_lam = 1.0 / np.sqrt(np.maximum(self._lam, 1e-6))
+            else:
+                inv_sqrt_lam = np.ones(Nd)
+
+            # Perturb observations (scaled by inv_sqrt_lam for Student-t)
             Duc = np.zeros_like(D)
             for i in range(self.nEnsemble):
                 if self.calculation_type == "ikea":
                     Duc[:, i] = (
-                        np.sqrt(step_inflation) * phi[:, i]
+                        np.sqrt(step_inflation) * phi[:, i] * inv_sqrt_lam
                         * np.random.normal(0, 1, Nd)
                         + d_obs
                     )
                 else:
                     Duc[:, i] = (
-                        np.sqrt(step_inflation) * phi
+                        np.sqrt(step_inflation) * phi * inv_sqrt_lam
                         * np.random.normal(0, 1, Nd)
                         + d_obs
                     )
 
             start = time.time()
-
-            # ── Student-t: inflate noise covariance by 1/λ ──────────────────
-            if self.likelihood == "student_t":
-                inv_sqrt_lam = 1.0 / np.sqrt(np.maximum(self._lam, 1e-6))
-            else:
-                inv_sqrt_lam = np.ones(Nd)
 
             # Calculate M_update
             M_update = np.zeros_like(M)
@@ -401,7 +404,7 @@ class esmda:
                     del_D, full_matrices=False, compute_uv=True, hermitian=False
                 )
                 Binv = np.diag(Wd ** (-2))
-                aCd = (Ne - 1) * step_inflation * phi ** 2
+                aCd = (Ne - 1) * step_inflation * phi ** 2 * inv_sqrt_lam ** 2
                 AinvUd = ((aCd ** (-1)) * Ud.T).T
                 bracket = Binv + Ud.T @ AinvUd
                 bracketinv = np.linalg.inv(bracket)
@@ -492,7 +495,7 @@ class esmda:
         """Generate posterior predictive samples by adding observation noise."""
         base = os.path.basename(self.job_name)
         pred_post = pd.DataFrame()
-        fname = f"{base}_{self.maxIter}_data.csv"
+        fname = f"{base}_{self.maxIter - 1}_data.csv"
         posterior = pd.read_csv(os.path.join(self.job_name, fname))
         del posterior[posterior.columns[0]]
         noise = self.observation_data.noise.values
