@@ -170,10 +170,15 @@ Y \mid \lambda &\sim \mathcal{N}\!\left(\mu,\; \frac{\sigma^2}{\lambda}\right).
 \end{align}
 Integrating over $\lambda$ yields the marginal density
 $Y \sim t_\nu(\mu, \sigma)$.
-The parametrisation $\text{InvGamma}(\nu/2, \nu/2)$ ensures
-$\mathbb{E}[\lambda] = 1$ for $\nu > 2$, so typical observations
-experience effective variance $\sigma^2$---identical to the Gaussian
-model.
+The parametrisation is chosen so that the underlying Gamma
+random variable (before inversion) has mean~1.
+The mean of the resulting inverse Gamma is
+$\mathbb{E}[\lambda] = \nu/(\nu-2)$ for $\nu > 2$, meaning that for the
+$\nu \approx 4.3$ observed in our application, typical observations
+experience effective variance $\sigma^2/1.87 < \sigma^2$ and are
+perturbed \emph{less} than under the Gaussian model.
+The additional probability mass is concentrated in the tails, where
+$\lambda \ll 1$ inflates variance for genuine outliers.
 Outlier observations receive $\lambda_i \ll 1$, inflating their effective
 variance to $\sigma^2 / \lambda_i$ and reducing their influence on
 parameter estimates.
