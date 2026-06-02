@@ -92,6 +92,29 @@ These methods update a finite ensemble of parameter vectors through
 repeated forward model evaluations, exploiting parallel computation and
 avoiding the sequential dependence of Markov chain Monte Carlo (MCMC).
 
+A growing body of literature demonstrates that the Gaussian error
+assumption ubiquitous in hydrological model calibration is often a poor
+statistical description of observed data.
+Environmental time series are characterised by outliers, heavy-tailed
+residual distributions, and heteroscedasticity---features inadequately
+captured by a symmetric, light-tailed normal distribution
+\cite{Schoups2010,Smith2022,Marshall2006}.
+A recent comprehensive review~\cite{Review2025} concludes that
+heavy-tailed likelihoods ``are not merely a niche solution but a more
+appropriate default for environmental data,'' citing consistent
+improvements in parameter robustness, predictive reliability, and
+uncertainty quantification across diverse model types and water quality
+constituents.
+The review identifies the integration of robust likelihoods with advanced
+ensemble methods as a priority area for future research.
+
+Within the Bayesian calibration literature, the Student-$t$ distribution
+has been applied to conceptual rainfall--runoff models using MCMC
+\cite{Marshall2006}, where it yielded substantially improved parameter
+identifiability (posterior variances reduced by orders of magnitude) and
+decisively better model fit (BIC improved by $\sim$5,400 units) compared
+to a Gaussian likelihood with fixed degrees of freedom $\nu = 4$.
+
 A fundamental assumption of the ES-MDA framework is that observation
 errors are Gaussian.
 For hydrological data, this assumption is routinely violated: daily
@@ -112,7 +135,9 @@ admitting a \emph{scale-mixture-of-normals} representation~\cite{West1987}:
 conditional on a latent weight $\lambda_i$, each observation is Gaussian,
 and the Kalman update is exact.
 This makes the Student-$t$ uniquely suitable for the ensemble Kalman
-framework: the implementation reduces to drawing $\lambda_i$ from their
+framework---addressing the open problem identified by
+\cite{Review2025}---and the implementation reduces to drawing
+$\lambda_i$ from their
 residual-conditional posterior at each iteration (with a prior draw at
 iteration~0 when residuals are unreliable) and scaling the observation
 perturbation by $1/\sqrt{\lambda_i}$.
@@ -621,6 +646,17 @@ Bureau of Meteorology~\cite{Zhang2014}.
   \newblock ``Numba: A LLVM-Based Python JIT Compiler.''
   \newblock In \emph{Proceedings of the Second Workshop on the LLVM
              Compiler Infrastructure in HPC}, pp.~1--6.
+
+\bibitem[Marshall et al.(2006)]{Marshall2006}
+  Marshall~L, Sharma~A, Nott~D (2006).
+  \newblock ``Modeling the Catchment via Mixtures: Issues of Model
+             Specification and Validation.''
+  \newblock \emph{Water Resources Research}, \textbf{42}, W11409.
+
+\bibitem[Review(2025)]{Review2025}
+  \newblock ``Beyond Normality: A Review of Heavy-Tailed Likelihoods for
+             Robust Hydrological and Water Quality Prediction.''
+  \newblock \emph{In press}.
 
 \bibitem[Schoups and Vrugt(2010)]{Schoups2010}
   Schoups~G, Vrugt~JA (2010).
