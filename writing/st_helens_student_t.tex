@@ -36,7 +36,7 @@ We extend the ARIES ensemble smoother with an adaptive Student-$t$
 likelihood via the scale-mixture-of-normals representation, introducing
 latent per-observation weights $\lambda_i$ drawn from their
 posterior conditional on the current ensemble residuals,
-$\lambda_i \mid r_i \sim \text{InvGamma}((\nu+1)/2, (\nu+r_i^2)/2)$,
+$\lambda_i \mid r_i \sim \text{Gamma}((\nu+1)/2, (\nu+r_i^2)/2)$,
 that automatically down-weight extreme residuals.
 The degrees of freedom $\nu$ is estimated from ensemble residuals at each
 iteration using kurtosis matching with exponential moving-average smoothing.
@@ -462,7 +462,7 @@ $R^2$         & 0.872 & 0.871 & 0.856 & 0.858 \\
 P-factor (\%) & 95.7  & \textbf{97.3} & 93.8  & \textbf{96.2} \\
 R-factor      & 0.233 & 0.335 & 0.278 & 0.395 \\
 CRPS (m$^{3}$/s) & 1.27 & 1.27 & 1.58 & 1.58 \\
-Noise $\sigma_t$ & 0.534 & 0.534 & --- & --- \\
+Noise $\phi$ (trans.) & 0.534 & 0.534 & --- & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
