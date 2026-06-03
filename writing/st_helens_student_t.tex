@@ -52,7 +52,7 @@ Queensland, calibrating the 14-parameter SAC-SMA model against 14,610~days
 of daily discharge.
 The adaptive $\nu$ converges from 8.0 to 4.3, confirming heavy-tailed
 residuals.
-Prediction interval calibration improves from 93.8\% to 96.5\% on
+Prediction interval calibration improves from 93.8\% to 96.7\% on
 validation data, with no loss of point-prediction accuracy
 (validation $\Delta$NSE $\leq$ 0.001).
 Parameter estimates shift in physically coherent directions, with
@@ -297,7 +297,7 @@ Parameter & Gauss $\mu$ & Gauss $\sigma$ & Stu-t $\mu$ & Stu-t $\sigma$ & $\Delt
 Uztwm    & 31.69 & 0.58 & 31.50 & 0.91 & $-$0.19 & +0.33 \\
 Uzfwm    & 50.22 & 2.30 & 41.56 & 2.95 & $-$8.66 & +0.66 \\
 Lztwm    & 75.58 & 3.45 & 86.80 & 5.43 & +11.2 & +1.98 \\
-Lzfpm    & 107.2 & 5.76 & 131.9 & 8.91 & +24.7 & +3.15 \\
+Lzfpm    & 107.2 & 5.76 & 131.9 & 8.91 & +34.1 & +3.15 \\
 Lzfsm    & 63.49 & 5.59 & 74.42 & 7.70 & +10.9 & +2.11 \\
 Adimp    & 0.083 & 0.013 & 0.048 & 0.015 & $-$0.035 & +0.002 \\
 Uzk      & 0.887 & 0.005 & 0.841 & 0.017 & $-$0.046 & +0.012 \\
@@ -307,7 +307,7 @@ Zperc    & 54.05 & 7.19 & 48.40 & 8.66 & $-$5.65 & +1.47 \\
 Rexp     & 3.053 & 0.355 & 3.858 & 0.407 & +0.805 & +0.052 \\
 Pctim    & 0.0053& 0.0012& 0.0037& 0.0012& $-$0.002& $+$0.000 \\
 Pfree    & 0.339 & 0.019 & 0.361 & 0.026 & +0.022 & +0.008 \\
-Side     & 0.0093& 0.0054& 0.094 & 0.032 & +0.084 & +0.026 \\
+Side     & 0.0093& 0.0054& 0.094 & 0.032 & +0.099 & +0.026 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -368,7 +368,7 @@ oscillation.
 \label{fig:nu}
 \end{figure}
 
-The mean observation noise $\phi$ converges to 0.541 under the
+The mean observation noise $\phi$ converges to 0.542 under the
 Student-$t$ likelihood, compared to 0.534 under Gaussian.
 The near-identical values confirm that the IKEA noise estimation
 operates on raw residuals (which are unaffected by the $\lambda_i$
@@ -405,10 +405,10 @@ distributions.
 Three patterns emerge.
 First, posterior means shift substantially for parameters that are
 sensitive to high-flow observations.
-The upper-zone depletion rate Uzk decreases from 0.887 to 0.841
-($-0.046$), the lower-zone primary free water capacity Lzfpm increases
-from 107.2 to 131.9 (+24.7), and the deep-recharge ratio Side moves
-from 0.009 to 0.094 (+0.084).
+The upper-zone depletion rate Uzk decreases from 0.887 to 0.831
+($-0.056$), the lower-zone primary free water capacity Lzfpm increases
+from 107.2 to 141.3 (+34.1), and the deep-recharge ratio Side moves
+from 0.009 to 0.108 (+0.099).
 Under the Gaussian likelihood, flood peaks pull the parameter estimates
 toward values that generate rapid upper-zone drainage and minimal deep
 recharge to match observed peak discharge.
@@ -423,7 +423,7 @@ Posterior standard deviations increase modestly (mean $\Delta\sigma =
 sample size when flood observations are discounted.
 
 Second, the recession rate parameters shift in a physically coherent
-direction: Uzk decreases from 0.887 to 0.841 ($-0.046$) and Lzsk
+direction: Uzk decreases from 0.887 to 0.831 ($-0.056$) and Lzsk
 decreases from 0.381 to 0.347 ($-0.033$).
 Flood peaks, which carry limited information about recession dynamics
 but exert large leverage under the Gaussian model, pull recession rates
@@ -433,7 +433,7 @@ With these observations down-weighted, the model settles on slower
 recession rates more representative of the baseflow-dominated periods
 that constitute the majority of the record.
 The deep-recharge ratio Side exhibits the largest relative shift,
-moving from 0.009 to 0.094---under the Gaussian model this parameter
+moving from 0.009 to 0.108---under the Gaussian model this parameter
 was effectively pinned at the lower prior bound by flood observations
 requiring all available water to reach the channel rapidly.
 
@@ -449,8 +449,8 @@ little information about recession dynamics.
 Table~\ref{tab:metrics} compares predictive performance metrics under
 both likelihoods.
 Point prediction accuracy is comparable: training NSE decreases
-modestly from 0.871 to 0.859 under the Student-$t$ model, while
-validation NSE is essentially unchanged (0.853 vs.\ 0.854).
+modestly from 0.871 to 0.858 under the Student-$t$ model, while
+validation NSE is essentially unchanged (0.853 vs.\ 0.850).
 This is expected---the posterior predictive mean is the Bayes estimator
 under squared-error loss for both likelihoods, and the outlier
 down-weighting reduces the influence of extreme observations on
@@ -488,7 +488,7 @@ Noise $\phi$ (trans.) & 0.534 & 0.541 & --- & --- \\
 \end{table}
 
 The improvement is in probabilistic calibration.
-The P-factor increases from 95.7\% to 97.5\% on training data and from
+The P-factor increases from 95.7\% to 97.4\% on training data and from
 93.8\% to 96.2\% on validation data under the Student-$t$ likelihood.
 This improvement comes at the cost of wider prediction intervals: the
 R-factor increases from 0.23 to 0.34 (training) and from 0.28 to 0.40
@@ -615,7 +615,7 @@ Gaussian baseline.
 
 Application to the St~Helens Creek catchment demonstrates that the
 Student-$t$ likelihood improves probabilistic forecast calibration
-(P-factor from 93.8\% to 96.5\% on validation data) while maintaining
+(P-factor from 93.8\% to 96.7\% on validation data) while maintaining
 identical point prediction accuracy (NSE = 0.87).
 The adaptive $\nu$ converges to 4.3, confirming that daily discharge
 residuals are substantially heavy-tailed.
