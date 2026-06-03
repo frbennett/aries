@@ -37,8 +37,9 @@ drawn from a Gamma distribution, implementing the scale-mixture-of-normals
 representation of the Student-$t$ likelihood; (2)~adaptive estimation of
 the degrees of freedom $\nu$ from the ensemble residuals at each
 iteration via kurtosis matching; and (3)~inflation of both the
-observation perturbation and the noise covariance matrix by
-$1/\sqrt{\lambda_i}$, preserving the exactness of the ensemble Kalman
+observation perturbation by $1/\sqrt{\lambda_i}$ and of the noise
+covariance matrix by $1/\lambda_i$, preserving the exactness of the
+ensemble Kalman
 update conditional on the latent weights.
 The algorithm adds approximately 50 lines to an existing ES-MDA
 implementation and introduces no new tuning parameters beyond those
