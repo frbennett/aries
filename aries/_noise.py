@@ -282,7 +282,7 @@ def _mcmc_update(data, G, error, group_idx,
         # Log-posterior of γ = log(σ)  (HalfNormal(τ) prior + Normal likelihood)
         def log_target(gamma):
             s2 = np.exp(2 * gamma)
-            return -n_obs * gamma - 0.5 * SS / s2 - 0.5 * s2 / tau ** 2
+            return -(n_obs - 1) * gamma - 0.5 * SS / s2 - 0.5 * s2 / tau ** 2
 
         # Posterior width estimate from curvature at starting point
         gamma0 = np.log(max(np.std(y - g), 1e-12))
