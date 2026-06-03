@@ -1,0 +1,285 @@
+\documentclass[article,nojss]{jss}
+
+%% -- Packages --------------------------------------------------
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{bm}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+%% -- Page header -----------------------------------------------
+\usepackage{fancyhdr}
+\fancyhead[L]{}
+\fancyhead[C]{}
+\fancyhead[R]{\thepage}
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+
+%% -- Metadata --------------------------------------------------
+\title{Algorithm: ES-MDA with Adaptive Student-\emph{t} Likelihood}
+\Plaintitle{ES-MDA with Adaptive Student-t Likelihood}
+\Shorttitle{Student-t ES-MDA Algorithm}
+
+\author{Frederick~Bennett}
+\Plainauthor{Frederick Bennett}
+
+\Abstract{
+This document presents the complete algorithm for the adaptive
+Student-$t$ ensemble smoother described in the accompanying paper.
+The algorithm extends the standard ES-MDA framework with three
+components: (1)~latent per-observation precision weights $\lambda_i$
+drawn from a Gamma distribution, implementing the scale-mixture-of-normals
+representation of the Student-$t$ likelihood; (2)~adaptive estimation of
+the degrees of freedom $\nu$ from the ensemble residuals at each
+iteration via kurtosis matching; and (3)~inflation of both the
+observation perturbation and the noise covariance matrix by
+$1/\sqrt{\lambda_i}$, preserving the exactness of the ensemble Kalman
+update conditional on the latent weights.
+The algorithm adds approximately 50 lines to an existing ES-MDA
+implementation and introduces no new tuning parameters beyond those
+already required by the base method.
+}
+
+\Keywords{ensemble smoother, Student-t, pseudocode, algorithm, ES-MDA}
+\Plainkeywords{ensemble smoother, Student-t, pseudocode, algorithm, ES-MDA}
+
+\Address{
+  Frederick Bennett\\
+  Department of Environment, Tourism, Science and Innovation\\
+  Queensland Government\\
+  E-mail: \email{frederick.bennett@des.qld.gov.au}
+}
+
+\begin{document}
+
+%=============================================================================
+\section{Algorithm Description}
+%=============================================================================
+
+The algorithm extends the standard ES-MDA loop with three insertions,
+marked \textbf{(S1)--(S3)} in Algorithm~\ref{alg:esmda_student_t}.
+The remaining steps are unchanged from the Gaussian ES-MDA formulation
+of \cite{Emerick2013}.
+
+\subsection*{(S1) Adaptive $\nu$ Estimation}
+
+After the forward model has been evaluated for all ensemble members
+(Step~2a), the ensemble-mean residuals are standardised by the current
+noise estimate $\bar{\phi}_i$.
+A robust sample kurtosis $\hat{\kappa}$ is computed from residuals
+clipped to $\pm 8$ standard deviations, preventing individual extreme
+outliers from dominating the fourth moment.
+If $\hat{\kappa} > 3.1$ (indicating heavier-than-Gaussian tails), the
+degrees of freedom are estimated via the method-of-moments formula
+$\hat{\nu} = 4 + 6/(\hat{\kappa} - 3)$, which is exact for a
+Student-$t$ distribution with $\nu > 4$.
+Otherwise $\hat{\nu}$ is set to a high value (100), reflecting
+approximately Gaussian behaviour.
+The estimate is smoothed with an exponential moving average
+($\eta = 0.7$) and clamped to $[3, 100]$.
+At the first iteration, $\nu$ is initialised to a user-specified value
+(default 8.0) since residuals from the prior ensemble are unreliable.
+
+\subsection*{(S2) Latent Precision Weights}
+
+Each observation $i$ receives a latent precision multiplier $\lambda_i$,
+drawn from a Gamma distribution.
+At iteration~1, the prior $\text{Gamma}(\nu/2, \nu/2)$ is used.
+At subsequent iterations, the posterior conditional on the current
+standardised residual $r_i$ is used:
+$\lambda_i \mid r_i \sim \text{Gamma}((\nu+1)/2, (\nu+r_i^2)/2)$.
+This posterior draw targets down-weighting at observations that currently
+have large ensemble-mean residuals, rather than relying on random draws.
+The parametrisation $\text{Gamma}(\nu/2, \nu/2)$ gives $\mathbb{E}[\lambda_i]
+= 1$, so typical (well-fit) observations experience standard perturbation
+variance.
+
+\subsection*{(S3) Perturbation and Covariance Scaling}
+
+The latent weights enter the ES-MDA machinery in two places, both
+required for statistical consistency with the scale-mixture
+representation.
+First, the observation perturbation is scaled by $1/\sqrt{\lambda_i}$
+(Step~2d), so that observations with $\lambda_i \ll 1$ receive
+proportionally larger perturbation noise.
+Second, the observation noise covariance matrix $C_d$ is inflated by
+$1/\lambda_i$ (Step~2e), increasing the effective observation error
+variance for outliers and shrinking their contribution to the Kalman
+gain.
+Both scalings use the same weight vector
+$\mathbf{w} = 1/\sqrt{\max(\boldsymbol{\lambda}, \epsilon)}$ with
+$\epsilon = 10^{-6}$ for numerical stability.
+
+Conditional on $\boldsymbol{\lambda}$, the likelihood is exactly
+Gaussian, so the Kalman algebra (covariance computation, subspace
+inversion, parameter update) is unchanged.
+The IKEA Laplace noise estimation (Step~2f) operates on raw residuals
+and is unaffected by the latent weights, maintaining the separation
+between baseline noise estimation ($\phi$) and outlier accommodation
+($\boldsymbol{\lambda}$).
+
+%=============================================================================
+\section{Pseudocode}
+%=============================================================================
+
+\begin{algorithm}[tbp]
+\caption{ES-MDA with Adaptive Student-$t$ Likelihood}
+\label{alg:esmda_student_t}
+\begin{algorithmic}[1]
+\REQUIRE Prior ensemble $\mathbf{M}_0 \in \mathbb{R}^{N_m \times N_e}$,
+         observations $\mathbf{y} \in \mathbb{R}^{N_d}$,
+         inflation factors $\alpha_1, \ldots, \alpha_{N_a}$,
+         initial $\nu_0 = 8$, smoothing $\eta = 0.7$
+\ENSURE Posterior ensemble $\mathbf{M}_{N_a}$, final $\nu$, final $\boldsymbol{\phi}$
+
+\STATE $\boldsymbol{\phi} \gets \text{HalfNormal}(\mathbf{y}, \text{error})$
+       \hfill $\triangleright$ per-group noise prior
+\STATE $\nu \gets \nu_0$
+\STATE \textbf{for} $t = 1$ \textbf{to} $N_a$ \textbf{do}
+
+\STATE \quad $\tilde{\mathbf{M}} \gets \text{inv\_transform}(\mathbf{M})$
+       \hfill $\triangleright$ to physical parameter space
+\STATE \quad $\mathbf{D} \gets \text{fill\_ensemble}(\tilde{\mathbf{M}})$
+       \hfill $\triangleright$ $\mathbf{D} \in \mathbb{R}^{N_d \times N_e}$
+
+\STATE \quad \textbf{(S1) Estimate $\nu$} \textbf{(if $t > 1$)}
+\STATE \quad\quad $\bar{\mathbf{r}} \gets \mathbf{y} - \text{mean}(\mathbf{D}, \text{axis}=1)$
+\STATE \quad\quad $\hat{\mathbf{r}} \gets \bar{\mathbf{r}} \;/\; \max(\text{mean}(\boldsymbol{\phi}, \text{axis}=1),\, 10^{-8})$
+\STATE \quad\quad $\hat{\mathbf{r}} \gets \text{clip}(\hat{\mathbf{r}}, -8, 8)$
+\STATE \quad\quad $\hat{\kappa} \gets \mathbb{E}[\hat{\mathbf{r}}^4] \;/\; \mathbb{E}[\hat{\mathbf{r}}^2]^2$
+\STATE \quad\quad \textbf{if} $\hat{\kappa} > 3.1$ \textbf{then}
+                    $\hat{\nu} \gets 4 + 6/(\hat{\kappa} - 3)$
+                    \textbf{else} $\hat{\nu} \gets 100$
+\STATE \quad\quad $\nu \gets \eta\,\nu + (1-\eta)\,\text{clip}(\hat{\nu},\, 3,\, 100)$
+
+\STATE \quad \textbf{(S2) Draw latent precision weights $\boldsymbol{\lambda}$}
+\STATE \quad\quad \textbf{if} $t = 1$ \textbf{then}
+\STATE \quad\quad\quad $\boldsymbol{\lambda} \gets \text{Gamma}(\text{shape}=\nu/2,\,
+                         \text{rate}=\nu/2)$
+                         \hfill $\triangleright$ prior
+\STATE \quad\quad \textbf{else}
+\STATE \quad\quad\quad $\mathbf{r}^2 \gets \hat{\mathbf{r}}^2$
+\STATE \quad\quad\quad $\boldsymbol{\lambda} \gets \text{Gamma}(\text{shape}=(\nu+1)/2,\,
+                         \text{rate}=(\nu+\mathbf{r}^2)/2)$
+                         \hfill $\triangleright$ posterior
+
+\STATE \quad \textbf{(S3) Compute perturbation scaling}
+\STATE \quad\quad $\mathbf{w} \gets 1 \;/\; \sqrt{\max(\boldsymbol{\lambda},\, 10^{-6})}$
+
+\STATE \quad \textbf{Perturb observations}
+\STATE \quad\quad \textbf{for} $j = 1$ \textbf{to} $N_e$ \textbf{do}
+\STATE \quad\quad\quad $\tilde{\mathbf{D}}_{:,j} \gets \mathbf{y} +
+                         \sqrt{\alpha_t}\; \boldsymbol{\phi}_{:,j} \odot \mathbf{w} \odot
+                         \mathcal{N}(\mathbf{0}, \mathbf{1})$
+
+\STATE \quad \textbf{Kalman update}
+\STATE \quad\quad $\Delta\mathbf{D} \gets \mathbf{D} - \text{mean}(\mathbf{D}, \text{axis}=1)$
+\STATE \quad\quad $\Delta\mathbf{M} \gets \mathbf{M} - \text{mean}(\mathbf{M}, \text{axis}=1)$
+\STATE \quad\quad $\mathbf{C}_{md} \gets \Delta\mathbf{M} \,
+                          \Delta\mathbf{D}^{\mathsf{T}} \,/\, (N_e - 1)$
+\STATE \quad\quad $\mathbf{C}_{dd} \gets \Delta\mathbf{D} \,
+                          \Delta\mathbf{D}^{\mathsf{T}} \,/\, (N_e - 1)$
+\STATE \quad\quad \textbf{for} $j = 1$ \textbf{to} $N_e$ \textbf{do}
+\STATE \quad\quad\quad $\mathbf{C}_d \gets \text{diag}(\boldsymbol{\phi}_{:,j}^2 \odot
+                             \mathbf{w}^2)$
+                             \hfill $\triangleright$ inflated by $1/\boldsymbol{\lambda}$
+\STATE \quad\quad\quad $\mathbf{K} \gets \mathbf{C}_{dd} + \alpha_t \mathbf{C}_d$
+\STATE \quad\quad\quad $\mathbf{M}_{:,j} \gets \mathbf{M}_{:,j} +
+                             \mathbf{C}_{md} \, \mathbf{K}^{-1} \,
+                             (\tilde{\mathbf{D}}_{:,j} - \mathbf{D}_{:,j})$
+
+\STATE \quad \textbf{Update $\boldsymbol{\phi}$ (IKEA Laplace)}
+\STATE \quad\quad $\boldsymbol{\phi} \gets \text{covariance\_matrix}(
+                         \mathbf{D},\; \text{obs\_data},\; \alpha_t,\; \ldots)$
+
+\STATE \quad \textbf{Report:}
+         $\text{mean}(\boldsymbol{\phi})$, $\nu$,
+         $\text{mean}(\tilde{\mathbf{M}}, \text{axis}=1)$
+
+\STATE \textbf{end for}
+\STATE \textbf{return} $\mathbf{M}$, $\nu$, $\boldsymbol{\phi}$
+\end{algorithmic}
+\end{algorithm}
+
+%=============================================================================
+\section{Implementation Notes}
+%=============================================================================
+
+\subsection{Inversion Type Compatibility}
+
+The perturbation and covariance scaling (S3) must be applied to all
+inversion types supported by the base ES-MDA implementation:
+\texttt{efast\_subspace}, \texttt{fast\_subspace}, \texttt{subspace},
+\texttt{svd}, \texttt{esmda}, \texttt{esmda\_dask}, and \texttt{dask}.
+For the subspace-family methods, $\mathbf{w}^2$ enters the per-member
+noise vector $\mathbf{a}_{C_d} = (N_e-1)\,\alpha_t\,
+\boldsymbol{\phi}_{:,j}^2 \odot \mathbf{w}^2$.
+For the eFAST and Dask methods, the condensed noise vector
+$\boldsymbol{\phi}_{\text{rand}}$ is multiplied element-wise by
+$\mathbf{w}$.
+For the SVD method, the diagonal of $\mathbf{C}_d$ is multiplied by
+$\mathbf{w}^2$.
+
+\subsection{Numerical Guards}
+
+\begin{itemize}
+  \item $\boldsymbol{\lambda}$ is clipped to $[10^{-6}, \infty)$ before
+        computing $\mathbf{w}$ to prevent division by zero.
+  \item Residuals are clipped to $\pm 8$ before kurtosis computation
+        to robustify the $\nu$ estimator against individual extreme
+        outliers.
+  \item $\nu$ is clamped to $[3, 100]$: the lower bound ensures the
+        Gamma shape parameter $\nu/2$ remains $\geq 1.5$, preventing
+        degenerate draws; the upper bound provides a smooth transition
+        to the Gaussian limit.
+  \item The EMA smoothing constant $\eta = 0.7$ was chosen heuristically
+        and has not been systematically optimised. Lower values produce
+        faster adaptation but more iteration-to-iteration variation in
+        $\nu$.
+\end{itemize}
+
+\subsection{Computational Cost}
+
+The Student-$t$ extension adds three vector operations per iteration:
+a Gamma draw of length $N_d$ ($\sim$2~ms for $N_d = 11{,}323$), a
+kurtosis computation (one pass over $N_d$ residuals), and an EMA update
+(scalar).
+Total overhead is under 0.1~seconds per iteration, compared to 8--12
+seconds for the forward model evaluations and Kalman update.
+The asymptotic complexity of the ES-MDA loop is unchanged.
+
+\subsection{Relationship to the Gaussian Limit}
+
+As $\nu \to \infty$, the Gamma distribution concentrates at its mean,
+$\lambda_i \to 1$ for all $i$, and $\mathbf{w} \to \mathbf{1}$.
+The algorithm reduces exactly to the standard Gaussian ES-MDA.
+This property enables a single code path for both likelihoods, with
+the Gaussian case recovered by setting $\mathbf{w} = \mathbf{1}$
+(equivalent to \texttt{likelihood="gaussian"} in the implementation).
+
+\begin{thebibliography}{99}
+
+\bibitem[Botha et al.(2023)]{Botha2023}
+  Botha~I, Adams~MP, Tran~DH, Bennett~FR, Drovandi~CC (2023).
+  \newblock ``Component-Wise Iterative Ensemble Kalman Inversion for
+             Static Bayesian Models.''
+  \newblock \emph{Statistics and Computing}, \textbf{33}, 109.
+
+\bibitem[Emerick and Reynolds(2013)]{Emerick2013}
+  Emerick~AA, Reynolds~AC (2013).
+  \newblock ``Ensemble Smoother with Multiple Data Assimilation.''
+  \newblock \emph{Computers \& Geosciences}, \textbf{55}, 3--15.
+
+\bibitem[West(1987)]{West1987}
+  West~M (1987).
+  \newblock ``On Scale Mixtures of Normal Distributions.''
+  \newblock \emph{Biometrika}, \textbf{74}(3), 646--648.
+
+\end{thebibliography}
+
+\end{document}
