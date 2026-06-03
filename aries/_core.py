@@ -216,7 +216,7 @@ class esmda:
                 # Compute standardised residuals for λ draw
                 D_mean_arr = D.mean(axis=1)
                 resid = np.asarray(d_obs) - D_mean_arr
-                phi_mean_arr = phi.mean(axis=1)
+                phi_mean_arr = phi.mean(axis=1) if self.calculation_type == "ikea" else np.asarray(phi)
                 r2 = (resid / np.maximum(phi_mean_arr, 1e-8)) ** 2
 
                 nu = max(self._nu, 2.1)  # guard against degenerate values
